@@ -1,0 +1,60 @@
+# configs/qwen_sft_config.yaml
+
+# 模型相关参数
+model_args:
+  model_name_or_path: "Qwen/Qwen1.5-1.8B-Chat"
+  use_qlora: True
+  lora_rank: 32
+  lora_alpha: 64 # 通常是 rank 的两倍
+  lora_dropout: 0.05
+
+# 数据相关参数
+data_args:
+  processed_data_dir: "./data/processed" # 包含处理后数据的目录
+  train_file: "train_dataset.jsonl"                      # 训练文件名
+  validation_file: "validation_dataset.jsonl"              # 验证文件名
+  test_file: "test_dataset.jsonl"
+  test_size: 0.1
+  validation_size: 0.1
+  max_seq_length: 1024                          # 模型最大序列长度
+
+# 训练相关参数
+training_args:
+  output_dir: "/root/lanyun-tmp/llm_outputs/my_ckpt" # 所有输出的总目录
+  num_train_epochs: 3
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16
+  learning_rate: 2.0e-5
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  optim: "paged_adamw_32bit"
+  
+  # 日志、评估与保存
+  logging_steps: 2000
+  eval_steps: 2000
+  save_steps: 5000
+  save_total_limit: 3
+
+  # 性能相关
+  fp16: True
+  gradient_clipping: 1.0
+
+rag_args:
+  # 用于构建知识库的源文件，可以是您处理后的数据集
+  knowledge_base_file: "data/processed/train_dataset.jsonl" 
+  # 用于文本向量化的嵌入模型
+  embedding_model: "shibing624/text2vec-base-chinese"
+  # 每次检索返回的最相关文档数量
+  top_k: 3
+  # FAISS索引文件的保存路径
+  faiss_index_path: "outputs/rag_index/huatuo.index"
+
+inference_args:
+  # 推理时使用的LoRA适配器路径
+  # 'best_model' 或 'final_model' 或具体的 checkpoint 路径
+  adapter_path: "best_model" 
+  max_new_tokens: 1024
+  temperature: 0.7
+  top_p: 0.8
+  use_qlora: False
